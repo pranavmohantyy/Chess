@@ -1,4 +1,4 @@
-3/16/26
+3/17/26
 
 
 Project: Chess
@@ -16,10 +16,18 @@ How to run: TBD when game is fully finished, but for now, download the folder an
 Project structure: TBD
 
 
-Features: AI model with different difficulties
+Features: AI model with different difficulties (To be added)
 
 
-Known issues / limitations: None Known
+Known issues / limitations: 
+        You can’t easily store:
+	    •	Whether a pawn moved before
+	    •	Castling rights
+	    •	Piece-specific logic
+	    •	Valid moves per piece
+
+        Dragging of pieces instead of click to move removes pieces from the board entirely 
+
 
 
 Author: Pranav Mohanty 
