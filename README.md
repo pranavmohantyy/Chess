@@ -1,4 +1,4 @@
-3/17/26
+3/18/26
 
 
 Project: Chess
@@ -16,27 +16,22 @@ How to run: TBD when game is fully finished, but for now, download the folder an
 Project structure: TBD
 
 
-Features: AI model with different difficulties (To be added)
+Current Features
+	•	8x8 chessboard rendering
+	•	Piece display (text-based)
+	•	Click-to-select and move system
+	•	Basic turn structure (in progress)
+	•	Initial move validation system
+	•	Pawn movement logic (partially implemented)
+
 
 
 Known issues / limitations: 
-    You can’t easily store:
-  
-    
-	    Whether a pawn moved before
-
-
-    	Castling rights
-
-
-    	Piece-specific logic
-
-
-    	Valid moves per piece
-
-    
-    When dragging a piece instead of intended click, the piece array is removed entirely
-
+   	•	The board is represented as a 2D list of strings, which limits flexibility for tracking piece-specific state
+	•	Advanced rules are not yet implemented
+	•	Movement logic is incomplete, only basic pawn behavior is partially supported
+	•	No validation for check or checkmate conditions
+	•	Input handling can misinterpret dragging as a move, occasionally resulting in unintended state changes
 
 
 Author: Pranav Mohanty 

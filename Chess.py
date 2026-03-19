@@ -21,7 +21,7 @@ Beige = (245, 245, 220)
 
 pygame.init()
 
-ROWS, COLS = 8, 8
+#ROWS, COLS = 8, 8
 SQUARE_SIZE = 100
 
 board = [
@@ -49,9 +49,12 @@ def chess_board_drawing():
                 pygame.draw.rect(screen, White, (i * 100, j * 100, 100, 100))
             else:
                 pygame.draw.rect(screen, Black, (i * 100, j * 100, 100, 100))
+            if selected_piece:
+                row, col = selected_piece
+                pygame.draw.rect(screen, Yellow, (col * 100, row * 100, 100, 100), 5)
 
 def draw_pieces():
-    font = pygame.font.SysFont(None, 48)
+    font = pygame.font.SysFont(None, 48)    
 
     for row in range(8):
         for col in range(8):
@@ -60,10 +63,31 @@ def draw_pieces():
                 text = font.render(piece, True, Red)
                 screen.blit(text, (col * 100 + 35, row * 100 + 30))
 
+def get_valid_moves(row, col):
+    piece = board[row][col]
+    moves = []
+
+    if piece.lower() == "p":
+        direction = -1 if piece.isupper() else 1
+
+        if 0 <= row + direction < 8:
+            if board[row + direction][col] == "":
+                moves.append((row + direction, col))
+
+        for dc in [-1, 1]:
+            new_row = row + direction
+            new_col = col + dc
+            if 0 <= new_row < 8 and 0 <= new_col < 8:
+                target = board[new_row][new_col]
+                if target != "" and target.isupper() != piece.isupper():
+                    moves.append((new_row, new_col))
+
+    return moves
+
 
 
 def main():
-    global selected_piece
+    global selected_piece, turn
     running = True
 
     while running:
@@ -76,14 +100,22 @@ def main():
                 x, y = pygame.mouse.get_pos()
                 row = y // SQUARE_SIZE
                 col = x // SQUARE_SIZE
+
                 if selected_piece is None:
                     if board[row][col] != "":
                         selected_piece = (row, col)
                 else:
                     old_row, old_col = selected_piece
-                    board[row][col] = board[old_row][old_col]
-                    board[old_row][old_col] = ""
-                    selected_piece = None
+                    valid_moves = get_valid_moves(old_row, old_col)
+
+                    if (row, col) in valid_moves:
+                        board[row][col] = board[old_row][old_col]
+                        board[old_row][old_col] = ""
+                        selected_piece = None
+                    else:
+                        if board[row][col] != "":
+                            selected_piece = (row, col)
+
 
         chess_board_drawing()
         draw_pieces()
@@ -92,4 +124,3 @@ def main():
 
 main()
 pygame.quit()
-
