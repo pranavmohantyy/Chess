@@ -1,4 +1,4 @@
-3/19/26
+3/20/26
 
 
 Project: Chess
@@ -25,16 +25,16 @@ Current Features
 	•	Self-check prevention (illegal moves leaving king in check are blocked)
 	•	Pawn promotion to queen at final rank
 	•	Check detection status messages
+	•	Legal move highlighting (green circles on valid squares when piece selected)
+	•	Checkmate detection and game end
 
 
 
 Known issues / limitations: 
     •	The board is represented as a 2D list of strings, which limits flexibility for tracking piece-specific state and move history
 	•	Castling and en passant are not implemented
-	•	Checkmate/stalemate detection is not implemented
+	•	Stalemate detection is not implemented
 	•	Promotion choice UI is absent (auto-queen only)
 	•	No undo/redo, save/load, or AI opponent
-	•	Input handling is still basic; drag, misclicks, and hover behavior can be unstable
-
-
+	•	Input handling is still basic; drag and misclicks can be unstable despite move highlighting
 Author: Pranav Mohanty 

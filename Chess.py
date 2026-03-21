@@ -17,7 +17,7 @@ Orange = (255, 165, 0)
 Purple = (128, 0, 128)
 Pink = (255, 192, 203)
 Brown = (165, 42, 42)
-Beige = (245, 245, 220)
+Light_Green = (144, 238, 144)
 
 pygame.init()
 
@@ -38,8 +38,10 @@ board = [
 
 selected_piece = None
 turn = "white"
+game_over = False
 
 screen = pygame.display.set_mode((SCREEN_SIZE, SCREEN_SIZE))
+
 pygame.display.set_caption("Chess - Pranav Mohanty")
 
 def chess_board_drawing():
@@ -55,6 +57,12 @@ def chess_board_drawing():
         x = BOARD_OFFSET + col * SQUARE_SIZE
         y = BOARD_OFFSET + row * SQUARE_SIZE
         pygame.draw.rect(screen, Yellow, (x, y, SQUARE_SIZE, SQUARE_SIZE), 5)
+
+        valid_moves = get_valid_moves(row, col)
+        for move_row, move_col in valid_moves:
+            center_x = BOARD_OFFSET + move_col * SQUARE_SIZE + SQUARE_SIZE // 2
+            center_y = BOARD_OFFSET + move_row * SQUARE_SIZE + SQUARE_SIZE // 2
+            pygame.draw.circle(screen, Light_Green, (center_x, center_y), 15)
 
 
 def draw_pieces():
@@ -111,6 +119,18 @@ def is_in_check(color):
         return True
     opponent = "black" if color == "white" else "white"
     return is_square_attacked(king_pos[0], king_pos[1], opponent)
+
+
+def is_checkmate(color):
+    if not is_in_check(color):
+        return False
+    for r in range(8):
+        for c in range(8):
+            piece = board[r][c]
+            if piece != "" and piece_color(piece) == color:
+                if get_valid_moves(r, c):
+                    return False
+    return True
 
 
 def get_raw_moves_for_piece(row, col):
@@ -202,7 +222,7 @@ def get_valid_moves(row, col):
 
 
 def main():
-    global selected_piece, turn
+    global selected_piece, turn, game_over
     running = True
 
     while running:
@@ -210,6 +230,9 @@ def main():
             if event.type == pygame.QUIT:
                 running = False
                 break
+
+            if game_over:
+                continue
 
             if event.type == pygame.MOUSEBUTTONDOWN:
                 x, y = pygame.mouse.get_pos()
@@ -237,7 +260,11 @@ def main():
                         turn = "black" if turn == "white" else "white"
                         selected_piece = None
 
-                        if is_in_check(turn):
+                        if is_checkmate(turn):
+                            winner = "White" if turn == "black" else "Black"
+                            print(f"Checkmate! {winner} wins")
+                            game_over = True
+                        elif is_in_check(turn):
                             print(f"{turn.capitalize()} is in check")
 
                     else:
