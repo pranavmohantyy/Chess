@@ -1,4 +1,4 @@
-3/20/26
+3/21/26
 
 
 Project: Chess
@@ -27,6 +27,8 @@ Current Features
 	•	Check detection status messages
 	•	Legal move highlighting (green circles on valid squares when piece selected)
 	•	Checkmate detection and game end
+	•	Special rules such as en passant and castling
+
 
 
 
@@ -37,4 +39,6 @@ Known issues / limitations:
 	•	Promotion choice UI is absent (auto-queen only)
 	•	No undo/redo, save/load, or AI opponent
 	•	Input handling is still basic; drag and misclicks can be unstable despite move highlighting
+	•	Occasional recursion error due to multiple if statements
+	
 Author: Pranav Mohanty 
