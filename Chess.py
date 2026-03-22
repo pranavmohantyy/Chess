@@ -39,6 +39,11 @@ board = [
 selected_piece = None
 turn = "white"
 game_over = False
+last_move = None
+white_king_moved = False
+black_king_moved = False
+white_rooks_moved = [False, False]
+black_rooks_moved = [False, False]
 
 screen = pygame.display.set_mode((SCREEN_SIZE, SCREEN_SIZE))
 
@@ -158,6 +163,19 @@ def get_raw_moves_for_piece(row, col):
                 target = board[target_row][target_col]
                 if target != "" and piece_color(target) != color:
                     moves.append((target_row, target_col))
+        
+        if last_move:
+            last_from, last_to = last_move
+            last_from_row, last_from_col = last_from
+            last_to_row, last_to_col = last_to
+            last_piece = board[last_to_row][last_to_col]
+            if (last_piece.lower() == "p" and piece_color(last_piece) != color and 
+                last_to_row == row and abs(last_from_row - last_to_row) == 2):
+                if last_to_col == col - 1 or last_to_col == col + 1:
+                    en_passant_row = row + direction
+                    en_passant_col = last_to_col
+                    if in_bounds(en_passant_row, en_passant_col):
+                        moves.append((en_passant_row, en_passant_col))
 
     elif piece.lower() == "n":
         knight_deltas = [(2, 1), (2, -1), (-2, 1), (-2, -1), (1, 2), (1, -2), (-1, 2), (-1, -2)]
@@ -191,6 +209,17 @@ def get_raw_moves_for_piece(row, col):
             nr, nc = row + dr, col + dc
             if in_bounds(nr, nc) and (board[nr][nc] == "" or is_enemy(piece, board[nr][nc])):
                 moves.append((nr, nc))
+        
+        if color == "white" and not white_king_moved:
+            if not white_rooks_moved[0] and board[7][0] == "R" and board[7][1] == "" and board[7][2] == "" and board[7][3] == "":
+                moves.append((7, 2))
+            if not white_rooks_moved[1] and board[7][7] == "R" and board[7][5] == "" and board[7][6] == "":
+                moves.append((7, 6))
+        elif color == "black" and not black_king_moved:
+            if not black_rooks_moved[0] and board[0][0] == "r" and board[0][1] == "" and board[0][2] == "" and board[0][3] == "":
+                moves.append((0, 2))
+            if not black_rooks_moved[1] and board[0][7] == "r" and board[0][5] == "" and board[0][6] == "":
+                moves.append((0, 6))
 
     return moves
 
@@ -205,10 +234,23 @@ def get_valid_moves(row, col):
 
     raw_moves = get_raw_moves_for_piece(row, col)
     legal_moves = []
+    
+    is_castling_move = piece.lower() == "k"
 
     for nr, nc in raw_moves:
         origin = board[row][col]
         target = board[nr][nc]
+        
+        is_castling = (piece.lower() == "k" and abs(col - nc) == 2)
+        
+        if is_castling:
+            opponent = "black" if color == "white" else "white"
+            if is_in_check(color):
+                continue
+            intermediate_col = (col + nc) // 2
+            if is_square_attacked(row, intermediate_col, opponent):
+                continue
+        
         board[nr][nc] = origin
         board[row][col] = ""
 
@@ -222,7 +264,7 @@ def get_valid_moves(row, col):
 
 
 def main():
-    global selected_piece, turn, game_over
+    global selected_piece, turn, game_over, last_move, white_king_moved, black_king_moved, white_rooks_moved, black_rooks_moved
     running = True
 
     while running:
@@ -251,12 +293,48 @@ def main():
 
                     if (row, col) in valid_moves:
                         moving_piece = board[old_row][old_col]
+                        
+                        is_en_passant = (moving_piece.lower() == "p" and old_col != col and 
+                                        board[row][col] == "")
+                        
+                        is_castling = (moving_piece.lower() == "k" and abs(old_col - col) == 2)
+                        
                         board[row][col] = moving_piece
                         board[old_row][old_col] = ""
+                        
+                        if is_en_passant:
+                            board[old_row][col] = ""
+                        
+                        if is_castling:
+                            if col > old_col:
+                                board[row][col-1] = board[row][7]
+                                board[row][7] = ""
+                            else:
+                                board[row][col+1] = board[row][0]
+                                board[row][0] = ""
+
+                        if moving_piece.lower() == "k":
+                            if piece_color(moving_piece) == "white":
+                                white_king_moved = True
+                            else:
+                                black_king_moved = True
+                        
+                        if moving_piece.lower() == "r":
+                            if piece_color(moving_piece) == "white":
+                                if old_col == 0:
+                                    white_rooks_moved[0] = True
+                                elif old_col == 7:
+                                    white_rooks_moved[1] = True
+                            else:
+                                if old_col == 0:
+                                    black_rooks_moved[0] = True
+                                elif old_col == 7:
+                                    black_rooks_moved[1] = True
 
                         if moving_piece.lower() == "p" and row in (0, 7):
                             board[row][col] = "Q" if piece_color(moving_piece) == "white" else "q"
 
+                        last_move = ((old_row, old_col), (row, col))
                         turn = "black" if turn == "white" else "white"
                         selected_piece = None
 
