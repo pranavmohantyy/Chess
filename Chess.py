@@ -45,6 +45,10 @@ black_king_moved = False
 white_rooks_moved = [False, False]
 black_rooks_moved = [False, False]
 
+in_menu = True
+menu_options = ["Start Game", "Quit"]
+selected_option = 0
+
 screen = pygame.display.set_mode((SCREEN_SIZE, SCREEN_SIZE))
 
 pygame.display.set_caption("Chess - Pranav Mohanty")
@@ -81,6 +85,24 @@ def draw_pieces():
                 x = BOARD_OFFSET + col * SQUARE_SIZE + 35
                 y = BOARD_OFFSET + row * SQUARE_SIZE + 30
                 screen.blit(text, (x, y))
+
+def draw_menu():
+    screen.fill(Dark_Gray)
+    
+    title_font = pygame.font.SysFont(None, 72)
+    menu_font = pygame.font.SysFont(None, 48)
+    
+    title_text = title_font.render("Chess Game", True, White)
+    title_x = SCREEN_SIZE // 2 - title_text.get_width() // 2
+    title_y = 150
+    screen.blit(title_text, (title_x, title_y))
+    
+    for i, option in enumerate(menu_options):
+        color = Yellow if i == selected_option else White
+        option_text = menu_font.render(option, True, color)
+        option_x = SCREEN_SIZE // 2 - option_text.get_width() // 2
+        option_y = 300 + i * 80
+        screen.blit(option_text, (option_x, option_y))
 
 def in_bounds(row, col):
     return 0 <= row < 8 and 0 <= col < 8
@@ -264,7 +286,7 @@ def get_valid_moves(row, col):
 
 
 def main():
-    global selected_piece, turn, game_over, last_move, white_king_moved, black_king_moved, white_rooks_moved, black_rooks_moved
+    global selected_piece, turn, game_over, last_move, white_king_moved, black_king_moved, white_rooks_moved, black_rooks_moved, in_menu, selected_option
     running = True
 
     while running:
@@ -273,88 +295,114 @@ def main():
                 running = False
                 break
 
-            if game_over:
-                continue
-
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                x, y = pygame.mouse.get_pos()
-                col = (x - BOARD_OFFSET) // SQUARE_SIZE
-                row = (y - BOARD_OFFSET) // SQUARE_SIZE
-
-                if not in_bounds(row, col):
+            if in_menu:
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_UP:
+                        selected_option = (selected_option - 1) % len(menu_options)
+                    elif event.key == pygame.K_DOWN:
+                        selected_option = (selected_option + 1) % len(menu_options)
+                    elif event.key == pygame.K_RETURN:
+                        if selected_option == 0:
+                            in_menu = False
+                        elif selected_option == 1:
+                            running = False
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    x, y = pygame.mouse.get_pos()
+                    for i, option in enumerate(menu_options):
+                        option_text = pygame.font.SysFont(None, 48).render(option, True, White)
+                        option_x = SCREEN_SIZE // 2 - option_text.get_width() // 2
+                        option_y = 300 + i * 80
+                        if option_x <= x <= option_x + option_text.get_width() and option_y <= y <= option_y + option_text.get_height():
+                            if i == 0:
+                                in_menu = False
+                            elif i == 1:
+                                running = False
+                            break
+            else:
+                if game_over:
                     continue
 
-                if selected_piece is None:
-                    if board[row][col] != "" and piece_color(board[row][col]) == turn:
-                        selected_piece = (row, col)
-                else:
-                    old_row, old_col = selected_piece
-                    valid_moves = get_valid_moves(old_row, old_col)
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    x, y = pygame.mouse.get_pos()
+                    col = (x - BOARD_OFFSET) // SQUARE_SIZE
+                    row = (y - BOARD_OFFSET) // SQUARE_SIZE
 
-                    if (row, col) in valid_moves:
-                        moving_piece = board[old_row][old_col]
-                        
-                        is_en_passant = (moving_piece.lower() == "p" and old_col != col and 
-                                        board[row][col] == "")
-                        
-                        is_castling = (moving_piece.lower() == "k" and abs(old_col - col) == 2)
-                        
-                        board[row][col] = moving_piece
-                        board[old_row][old_col] = ""
-                        
-                        if is_en_passant:
-                            board[old_row][col] = ""
-                        
-                        if is_castling:
-                            if col > old_col:
-                                board[row][col-1] = board[row][7]
-                                board[row][7] = ""
-                            else:
-                                board[row][col+1] = board[row][0]
-                                board[row][0] = ""
+                    if not in_bounds(row, col):
+                        continue
 
-                        if moving_piece.lower() == "k":
-                            if piece_color(moving_piece) == "white":
-                                white_king_moved = True
-                            else:
-                                black_king_moved = True
-                        
-                        if moving_piece.lower() == "r":
-                            if piece_color(moving_piece) == "white":
-                                if old_col == 0:
-                                    white_rooks_moved[0] = True
-                                elif old_col == 7:
-                                    white_rooks_moved[1] = True
-                            else:
-                                if old_col == 0:
-                                    black_rooks_moved[0] = True
-                                elif old_col == 7:
-                                    black_rooks_moved[1] = True
-
-                        if moving_piece.lower() == "p" and row in (0, 7):
-                            board[row][col] = "Q" if piece_color(moving_piece) == "white" else "q"
-
-                        last_move = ((old_row, old_col), (row, col))
-                        turn = "black" if turn == "white" else "white"
-                        selected_piece = None
-
-                        if is_checkmate(turn):
-                            winner = "White" if turn == "black" else "Black"
-                            print(f"Checkmate! {winner} wins")
-                            game_over = True
-                        elif is_in_check(turn):
-                            print(f"{turn.capitalize()} is in check")
-
-                    else:
+                    if selected_piece is None:
                         if board[row][col] != "" and piece_color(board[row][col]) == turn:
                             selected_piece = (row, col)
-                        else:
+                    else:
+                        old_row, old_col = selected_piece
+                        valid_moves = get_valid_moves(old_row, old_col)
+
+                        if (row, col) in valid_moves:
+                            moving_piece = board[old_row][old_col]
+                            
+                            is_en_passant = (moving_piece.lower() == "p" and old_col != col and 
+                                            board[row][col] == "")
+                            
+                            is_castling = (moving_piece.lower() == "k" and abs(old_col - col) == 2)
+                            
+                            board[row][col] = moving_piece
+                            board[old_row][old_col] = ""
+                            
+                            if is_en_passant:
+                                board[old_row][col] = ""
+                            
+                            if is_castling:
+                                if col > old_col:
+                                    board[row][col-1] = board[row][7]
+                                    board[row][7] = ""
+                                else:
+                                    board[row][col+1] = board[row][0]
+                                    board[row][0] = ""
+
+                            if moving_piece.lower() == "k":
+                                if piece_color(moving_piece) == "white":
+                                    white_king_moved = True
+                                else:
+                                    black_king_moved = True
+                            
+                            if moving_piece.lower() == "r":
+                                if piece_color(moving_piece) == "white":
+                                    if old_col == 0:
+                                        white_rooks_moved[0] = True
+                                    elif old_col == 7:
+                                        white_rooks_moved[1] = True
+                                else:
+                                    if old_col == 0:
+                                        black_rooks_moved[0] = True
+                                    elif old_col == 7:
+                                        black_rooks_moved[1] = True
+
+                            if moving_piece.lower() == "p" and row in (0, 7):
+                                board[row][col] = "Q" if piece_color(moving_piece) == "white" else "q"
+
+                            last_move = ((old_row, old_col), (row, col))
+                            turn = "black" if turn == "white" else "white"
                             selected_piece = None
 
+                            if is_checkmate(turn):
+                                winner = "White" if turn == "black" else "Black"
+                                print(f"Checkmate! {winner} wins")
+                                game_over = True
+                            elif is_in_check(turn):
+                                print(f"{turn.capitalize()} is in check")
 
-        screen.fill(Cyan)
-        chess_board_drawing()
-        draw_pieces()
+                        else:
+                            if board[row][col] != "" and piece_color(board[row][col]) == turn:
+                                selected_piece = (row, col)
+                            else:
+                                selected_piece = None
+
+        if in_menu:
+            draw_menu()
+        else:
+            screen.fill(Cyan)
+            chess_board_drawing()
+            draw_pieces()
         pygame.display.update()
 
 
