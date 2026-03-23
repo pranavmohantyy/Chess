@@ -1,4 +1,4 @@
-3/21/26
+3/22/26
 
 
 Project: Chess
@@ -13,7 +13,7 @@ Setup / Requirements: Python, Pip, Pygame,
 How to run: TBD when game is fully finished, but for now, download the folder and run through terminal
 
 
-Project structure: TBD
+Project structure: TBD	
 
 
 Current Features
@@ -28,6 +28,8 @@ Current Features
 	•	Legal move highlighting (green circles on valid squares when piece selected)
 	•	Checkmate detection and game end
 	•	Special rules such as en passant and castling
+	•	Added menu screen for future options/gamemodes
+
 
 
 
