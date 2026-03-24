@@ -20,6 +20,7 @@ Brown = (165, 42, 42)
 Light_Green = (144, 238, 144)
 
 pygame.init()
+clock = pygame.time.Clock()
 
 SQUARE_SIZE = 100
 SCREEN_SIZE = 1000
@@ -48,6 +49,10 @@ black_rooks_moved = [False, False]
 in_menu = True
 menu_options = ["Start Game", "Quit"]
 selected_option = 0
+
+white_time = 0.0
+black_time = 0.0
+turn_start_time = None
 
 screen = pygame.display.set_mode((SCREEN_SIZE, SCREEN_SIZE))
 
@@ -103,6 +108,21 @@ def draw_menu():
         option_x = SCREEN_SIZE // 2 - option_text.get_width() // 2
         option_y = 300 + i * 80
         screen.blit(option_text, (option_x, option_y))
+
+def format_time(seconds):
+    mins = int(seconds) // 60
+    secs = int(seconds) % 60
+    return f"{mins}:{secs:02d}"
+
+def draw_timers():
+    timer_font = pygame.font.SysFont(None, 36)
+    white_text = timer_font.render(f"White: {format_time(white_time)}", True, White)
+    black_text = timer_font.render(f"Black: {format_time(black_time)}", True, White)
+    screen.blit(white_text, (20, 20))
+    screen.blit(black_text, (20, 60))
+    
+    turn_indicator = timer_font.render(f"Turn: {turn.capitalize()}", True, Yellow if turn == "white" else White)
+    screen.blit(turn_indicator, (SCREEN_SIZE - 250, 20))
 
 def in_bounds(row, col):
     return 0 <= row < 8 and 0 <= col < 8
@@ -286,7 +306,7 @@ def get_valid_moves(row, col):
 
 
 def main():
-    global selected_piece, turn, game_over, last_move, white_king_moved, black_king_moved, white_rooks_moved, black_rooks_moved, in_menu, selected_option
+    global selected_piece, turn, game_over, last_move, white_king_moved, black_king_moved, white_rooks_moved, black_rooks_moved, in_menu, selected_option, white_time, black_time, turn_start_time
     running = True
 
     while running:
@@ -304,6 +324,7 @@ def main():
                     elif event.key == pygame.K_RETURN:
                         if selected_option == 0:
                             in_menu = False
+                            turn_start_time = pygame.time.get_ticks()
                         elif selected_option == 1:
                             running = False
                 elif event.type == pygame.MOUSEBUTTONDOWN:
@@ -315,10 +336,19 @@ def main():
                         if option_x <= x <= option_x + option_text.get_width() and option_y <= y <= option_y + option_text.get_height():
                             if i == 0:
                                 in_menu = False
+                                turn_start_time = pygame.time.get_ticks()
                             elif i == 1:
                                 running = False
                             break
             else:
+                if turn_start_time is not None:
+                    elapsed = (pygame.time.get_ticks() - turn_start_time) / 1000.0
+                    if turn == "white":
+                        white_time += elapsed
+                    else:
+                        black_time += elapsed
+                    turn_start_time = pygame.time.get_ticks()
+                
                 if game_over:
                     continue
 
@@ -382,6 +412,7 @@ def main():
 
                             last_move = ((old_row, old_col), (row, col))
                             turn = "black" if turn == "white" else "white"
+                            turn_start_time = pygame.time.get_ticks()
                             selected_piece = None
 
                             if is_checkmate(turn):
@@ -400,10 +431,31 @@ def main():
         if in_menu:
             draw_menu()
         else:
+            if turn_start_time is not None:
+                elapsed = (pygame.time.get_ticks() - turn_start_time) / 1000.0
+                if turn == "white":
+                    display_white_time = white_time + elapsed
+                    display_black_time = black_time
+                else:
+                    display_white_time = white_time
+                    display_black_time = black_time + elapsed
+            else:
+                display_white_time = white_time
+                display_black_time = black_time
+            
             screen.fill(Cyan)
             chess_board_drawing()
             draw_pieces()
+            
+            timer_font = pygame.font.SysFont(None, 36)
+            white_text = timer_font.render(f"White: {format_time(display_white_time)}", True, White)
+            black_text = timer_font.render(f"Black: {format_time(display_black_time)}", True, White)
+            screen.blit(white_text, (20, 20))
+            screen.blit(black_text, (20, 60))
+            turn_indicator = timer_font.render(f"Turn: {turn.capitalize()}", True, Yellow if turn == "white" else Yellow)
+            screen.blit(turn_indicator, (SCREEN_SIZE - 250, 20))
         pygame.display.update()
+        clock.tick(60)
 
 
 main()
