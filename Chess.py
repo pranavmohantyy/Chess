@@ -47,12 +47,36 @@ white_rooks_moved = [False, False]
 black_rooks_moved = [False, False]
 
 in_menu = True
-menu_options = ["Start Game", "Quit"]
+menu_options = ["Start Game", "Reset Game", "Quit"]
 selected_option = 0
 
 white_time = 0.0
 black_time = 0.0
 turn_start_time = None
+
+def reset_game():
+    global board, selected_piece, turn, game_over, last_move, white_king_moved, black_king_moved, white_rooks_moved, black_rooks_moved, white_time, black_time, turn_start_time
+    board = [
+        ["r","n","b","q","k","b","n","r"],
+        ["p","p","p","p","p","p","p","p"],
+        ["","","","","","","",""] ,
+        ["","","","","","","",""] ,
+        ["","","","","","","",""] ,
+        ["","","","","","","",""] ,
+        ["P","P","P","P","P","P","P","P"],
+        ["R","N","B","Q","K","B","N","R"],
+    ]
+    selected_piece = None
+    turn = "white"
+    game_over = False
+    last_move = None
+    white_king_moved = False
+    black_king_moved = False
+    white_rooks_moved = [False, False]
+    black_rooks_moved = [False, False]
+    white_time = 0.0
+    black_time = 0.0
+    turn_start_time = pygame.time.get_ticks()
 
 screen = pygame.display.set_mode((SCREEN_SIZE, SCREEN_SIZE))
 
@@ -326,6 +350,9 @@ def main():
                             in_menu = False
                             turn_start_time = pygame.time.get_ticks()
                         elif selected_option == 1:
+                            reset_game()
+                            in_menu = False
+                        elif selected_option == 2:
                             running = False
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     x, y = pygame.mouse.get_pos()
@@ -338,9 +365,16 @@ def main():
                                 in_menu = False
                                 turn_start_time = pygame.time.get_ticks()
                             elif i == 1:
+                                reset_game()
+                                in_menu = False
+                            elif i == 2:
                                 running = False
                             break
             else:
+                if event.type == pygame.KEYDOWN and event.key == pygame.K_r:
+                    reset_game()
+                    continue
+
                 if turn_start_time is not None:
                     elapsed = (pygame.time.get_ticks() - turn_start_time) / 1000.0
                     if turn == "white":
