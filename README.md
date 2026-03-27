@@ -18,7 +18,7 @@ Project structure: TBD
 
 Current Features
 	•	8x8 chessboard rendering
-	•	Piece display (text-based)
+	•	Piece display with better visuals (image-based / Unicode glyphs)
 	•	Click-to-select and move system
 	•	Full movement rules for all pieces (pawn, rook, knight, bishop, queen, king)
 	•	Turn enforcement (white/black)
@@ -28,7 +28,8 @@ Current Features
 	•	Legal move highlighting (green circles on valid squares when piece selected)
 	•	Checkmate detection and game end
 	•	Special rules: en passant and castling
-	•	Menu screen with Start Game and Quit options
+	•	Menu screen with Start Game, Reset Game, and Quit options
+	•	Reset game via menu or R key during play
 	•	Cumulative time tracking for each player
 	•	Real-time timer display during gameplay
 
@@ -37,12 +38,12 @@ Current Features
 
 
 Known issues / limitations: 
-    •	The board is represented as a 2D list of strings, which limits flexibility for tracking piece-specific state and move history
+    •	The board is still represented as a 2D list of strings, which limits flexibility for advanced state tracking and move history
 	•	Stalemate detection is not implemented
 	•	Promotion choice UI is absent (auto-queen only)
 	•	No undo/redo, save/load, or AI opponent
-	•	No time limits (timers track cumulative time but don't enforce boundaries)
-	•	Drag and drop not supported (click-to-move only)
-	•	Text-based piece display (Unicode or graphics not implemented)
+	•	No time limit enforcement (timers are cumulative only)
+	•	Drag-and-drop UI not supported (click-to-move only)
+	•	No sound effects yet
 	
 Author: Pranav Mohanty 
