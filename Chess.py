@@ -46,6 +46,15 @@ black_king_moved = False
 white_rooks_moved = [False, False]
 black_rooks_moved = [False, False]
 
+previous_board = None
+previous_turn = None
+previous_white_king_moved = False
+previous_black_king_moved = False
+previous_white_rooks_moved = [False, False]
+previous_black_rooks_moved = [False, False]
+previous_white_time = 0.0
+previous_black_time = 0.0
+
 in_menu = True
 menu_options = ["Start Game", "Reset Game", "Quit"]
 selected_option = 0
@@ -55,7 +64,7 @@ black_time = 0.0
 turn_start_time = None
 
 def reset_game():
-    global board, selected_piece, turn, game_over, last_move, white_king_moved, black_king_moved, white_rooks_moved, black_rooks_moved, white_time, black_time, turn_start_time
+    global board, selected_piece, turn, game_over, last_move, white_king_moved, black_king_moved, white_rooks_moved, black_rooks_moved, white_time, black_time, turn_start_time, previous_board, previous_turn, previous_white_king_moved, previous_black_king_moved, previous_white_rooks_moved, previous_black_rooks_moved, previous_white_time, previous_black_time
     board = [
         ["r","n","b","q","k","b","n","r"],
         ["p","p","p","p","p","p","p","p"],
@@ -77,6 +86,40 @@ def reset_game():
     white_time = 0.0
     black_time = 0.0
     turn_start_time = pygame.time.get_ticks()
+    previous_board = None
+    previous_turn = None
+    previous_white_king_moved = False
+    previous_black_king_moved = False
+    previous_white_rooks_moved = [False, False]
+    previous_black_rooks_moved = [False, False]
+    previous_white_time = 0.0
+    previous_black_time = 0.0
+
+def save_state():
+    global previous_board, previous_turn, previous_white_king_moved, previous_black_king_moved, previous_white_rooks_moved, previous_black_rooks_moved, previous_white_time, previous_black_time
+    previous_board = [row[:] for row in board]
+    previous_turn = turn
+    previous_white_king_moved = white_king_moved
+    previous_black_king_moved = black_king_moved
+    previous_white_rooks_moved = white_rooks_moved[:]
+    previous_black_rooks_moved = black_rooks_moved[:]
+    previous_white_time = white_time
+    previous_black_time = black_time
+
+def undo_move():
+    global board, turn, white_king_moved, black_king_moved, white_rooks_moved, black_rooks_moved, white_time, black_time, selected_piece, game_over, last_move
+    if previous_board is not None:
+        board = [row[:] for row in previous_board]
+        turn = previous_turn
+        white_king_moved = previous_white_king_moved
+        black_king_moved = previous_black_king_moved
+        white_rooks_moved = previous_white_rooks_moved[:]
+        black_rooks_moved = previous_black_rooks_moved[:]
+        white_time = previous_white_time
+        black_time = previous_black_time
+        selected_piece = None
+        game_over = False
+        last_move = None
 
 screen = pygame.display.set_mode((SCREEN_SIZE, SCREEN_SIZE))
 
@@ -375,6 +418,10 @@ def main():
                     reset_game()
                     continue
 
+                if event.type == pygame.KEYDOWN and event.key == pygame.K_u:
+                    undo_move()
+                    continue
+
                 if turn_start_time is not None:
                     elapsed = (pygame.time.get_ticks() - turn_start_time) / 1000.0
                     if turn == "white":
@@ -402,6 +449,7 @@ def main():
                         valid_moves = get_valid_moves(old_row, old_col)
 
                         if (row, col) in valid_moves:
+                            save_state()
                             moving_piece = board[old_row][old_col]
                             
                             is_en_passant = (moving_piece.lower() == "p" and old_col != col and 
