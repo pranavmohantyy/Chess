@@ -30,6 +30,7 @@ Current Features
 	•	Special rules: en passant and castling
 	•	Menu screen with Start Game, Reset Game, and Quit options
 	•	Reset game via menu or R key during play
+	•	Undo last move with U key
 	•	Cumulative time tracking for each player
 	•	Real-time timer display during gameplay
 
@@ -41,7 +42,7 @@ Known issues / limitations:
     •	The board is still represented as a 2D list of strings, which limits flexibility for advanced state tracking and move history
 	•	Stalemate detection is not implemented
 	•	Promotion choice UI is absent (auto-queen only)
-	•	No undo/redo, save/load, or AI opponent
+	•	No redo, save/load, or AI opponent
 	•	No time limit enforcement (timers are cumulative only)
 	•	Drag-and-drop UI not supported (click-to-move only)
 	•	No sound effects yet
