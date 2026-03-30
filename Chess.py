@@ -19,6 +19,17 @@ Pink = (255, 192, 203)
 Brown = (165, 42, 42)
 Light_Green = (144, 238, 144)
 
+BOARD_LIGHT = (240, 217, 181)
+BOARD_DARK = (181, 136, 99)
+BACKGROUND = (35, 35, 35)
+ACCENT_BLUE = (70, 130, 180)
+ACCENT_GREEN = (34, 139, 34)
+TEXT_WHITE = (255, 255, 255)
+TEXT_GRAY = (200, 200, 200)
+HIGHLIGHT_YELLOW = (255, 215, 0)
+SELECT_BLUE = (30, 144, 255)
+BORDER_COLOR = (100, 100, 100)
+
 pygame.init()
 clock = pygame.time.Clock()
 
@@ -62,9 +73,11 @@ selected_option = 0
 white_time = 0.0
 black_time = 0.0
 turn_start_time = None
+display_white_time = 0.0
+display_black_time = 0.0
 
 def reset_game():
-    global board, selected_piece, turn, game_over, last_move, white_king_moved, black_king_moved, white_rooks_moved, black_rooks_moved, white_time, black_time, turn_start_time, previous_board, previous_turn, previous_white_king_moved, previous_black_king_moved, previous_white_rooks_moved, previous_black_rooks_moved, previous_white_time, previous_black_time
+    global board, selected_piece, turn, game_over, last_move, white_king_moved, black_king_moved, white_rooks_moved, black_rooks_moved, white_time, black_time, turn_start_time, previous_board, previous_turn, previous_white_king_moved, previous_black_king_moved, previous_white_rooks_moved, previous_black_rooks_moved, previous_white_time, previous_black_time, display_white_time, display_black_time
     board = [
         ["r","n","b","q","k","b","n","r"],
         ["p","p","p","p","p","p","p","p"],
@@ -86,6 +99,8 @@ def reset_game():
     white_time = 0.0
     black_time = 0.0
     turn_start_time = pygame.time.get_ticks()
+    display_white_time = 0.0
+    display_black_time = 0.0
     previous_board = None
     previous_turn = None
     previous_white_king_moved = False
@@ -126,55 +141,99 @@ screen = pygame.display.set_mode((SCREEN_SIZE, SCREEN_SIZE))
 pygame.display.set_caption("Chess - Pranav Mohanty")
 
 def chess_board_drawing():
+    pygame.draw.rect(screen, BORDER_COLOR, (BOARD_OFFSET-5, BOARD_OFFSET-5, SQUARE_SIZE*8+10, SQUARE_SIZE*8+10), 5)
+    pygame.draw.rect(screen, BOARD_DARK, (BOARD_OFFSET-3, BOARD_OFFSET-3, SQUARE_SIZE*8+6, SQUARE_SIZE*8+6))
+
     for i in range(0, 8):
         for j in range(0, 8):
             x = BOARD_OFFSET + i * SQUARE_SIZE
             y = BOARD_OFFSET + j * SQUARE_SIZE
-            color = White if (i + j) % 2 == 0 else Black
+            color = BOARD_LIGHT if (i + j) % 2 == 0 else BOARD_DARK
             pygame.draw.rect(screen, color, (x, y, SQUARE_SIZE, SQUARE_SIZE))
+
+            pygame.draw.rect(screen, BORDER_COLOR, (x, y, SQUARE_SIZE, SQUARE_SIZE), 1)
 
     if selected_piece:
         row, col = selected_piece
         x = BOARD_OFFSET + col * SQUARE_SIZE
         y = BOARD_OFFSET + row * SQUARE_SIZE
-        pygame.draw.rect(screen, Yellow, (x, y, SQUARE_SIZE, SQUARE_SIZE), 5)
+        pygame.draw.rect(screen, SELECT_BLUE, (x, y, SQUARE_SIZE, SQUARE_SIZE), 4)
 
         valid_moves = get_valid_moves(row, col)
         for move_row, move_col in valid_moves:
             center_x = BOARD_OFFSET + move_col * SQUARE_SIZE + SQUARE_SIZE // 2
             center_y = BOARD_OFFSET + move_row * SQUARE_SIZE + SQUARE_SIZE // 2
-            pygame.draw.circle(screen, Light_Green, (center_x, center_y), 15)
+            pygame.draw.circle(screen, ACCENT_GREEN, (center_x, center_y), 12)
+            pygame.draw.circle(screen, TEXT_WHITE, (center_x, center_y), 8)
 
 
 def draw_pieces():
-    font = pygame.font.SysFont(None, 48)
+    font = pygame.font.SysFont("arial", 70, bold=True)
 
     for row in range(8):
         for col in range(8):
             piece = board[row][col]
             if piece != "":
-                text = font.render(piece, True, Red)
-                x = BOARD_OFFSET + col * SQUARE_SIZE + 35
-                y = BOARD_OFFSET + row * SQUARE_SIZE + 30
+                color = TEXT_WHITE if piece.isupper() else TEXT_GRAY
+                text = font.render(piece, True, color)
+
+                x = BOARD_OFFSET + col * SQUARE_SIZE + (SQUARE_SIZE - text.get_width()) // 2
+                y = BOARD_OFFSET + row * SQUARE_SIZE + (SQUARE_SIZE - text.get_height()) // 2
                 screen.blit(text, (x, y))
 
 def draw_menu():
-    screen.fill(Dark_Gray)
-    
-    title_font = pygame.font.SysFont(None, 72)
-    menu_font = pygame.font.SysFont(None, 48)
-    
-    title_text = title_font.render("Chess Game", True, White)
+    screen.fill(BACKGROUND)
+
+    for i in range(0, SCREEN_SIZE, 50):
+        for j in range(0, SCREEN_SIZE, 50):
+            if (i + j) % 100 == 0:
+                pygame.draw.rect(screen, (45, 45, 45), (i, j, 50, 50))
+
+    title_font = pygame.font.SysFont("arial", 80, bold=True)
+    shadow_font = pygame.font.SysFont("arial", 80, bold=True)
+
+    title_text = title_font.render("Chess Master", True, TEXT_WHITE)
+    shadow_text = shadow_font.render("Chess Master", True, (20, 20, 20))
+
     title_x = SCREEN_SIZE // 2 - title_text.get_width() // 2
-    title_y = 150
+    title_y = 120
+
+    screen.blit(shadow_text, (title_x + 3, title_y + 3))
     screen.blit(title_text, (title_x, title_y))
-    
+
+    subtitle_font = pygame.font.SysFont("arial", 24)
+    subtitle_text = subtitle_font.render("A Complete Chess Experience", True, TEXT_GRAY)
+    subtitle_x = SCREEN_SIZE // 2 - subtitle_text.get_width() // 2
+    subtitle_y = title_y + 90
+    screen.blit(subtitle_text, (subtitle_x, subtitle_y))
+
+    menu_font = pygame.font.SysFont("arial", 36, bold=True)
+
     for i, option in enumerate(menu_options):
-        color = Yellow if i == selected_option else White
+        option_width = 300
+        option_height = 60
+        option_x = SCREEN_SIZE // 2 - option_width // 2
+        option_y = 280 + i * 80
+
+        if i == selected_option:
+            pygame.draw.rect(screen, ACCENT_BLUE, (option_x, option_y, option_width, option_height), border_radius=10)
+            pygame.draw.rect(screen, HIGHLIGHT_YELLOW, (option_x, option_y, option_width, option_height), 3, border_radius=10)
+            color = TEXT_WHITE
+        else:
+            pygame.draw.rect(screen, (60, 60, 60), (option_x, option_y, option_width, option_height), border_radius=10)
+            pygame.draw.rect(screen, BORDER_COLOR, (option_x, option_y, option_width, option_height), 2, border_radius=10)
+            color = TEXT_GRAY
+
         option_text = menu_font.render(option, True, color)
-        option_x = SCREEN_SIZE // 2 - option_text.get_width() // 2
-        option_y = 300 + i * 80
-        screen.blit(option_text, (option_x, option_y))
+        text_x = option_x + (option_width - option_text.get_width()) // 2
+        text_y = option_y + (option_height - option_text.get_height()) // 2
+        screen.blit(option_text, (text_x, text_y))
+
+    footer_font = pygame.font.SysFont("arial", 18)
+    footer_text = footer_font.render("Use arrow keys to navigate • Enter to select • Mouse click supported", True, TEXT_GRAY)
+    footer_x = SCREEN_SIZE // 2 - footer_text.get_width() // 2
+    footer_y = SCREEN_SIZE - 50
+    screen.blit(footer_text, (footer_x, footer_y))
 
 def format_time(seconds):
     mins = int(seconds) // 60
@@ -182,14 +241,40 @@ def format_time(seconds):
     return f"{mins}:{secs:02d}"
 
 def draw_timers():
-    timer_font = pygame.font.SysFont(None, 36)
-    white_text = timer_font.render(f"White: {format_time(white_time)}", True, White)
-    black_text = timer_font.render(f"Black: {format_time(black_time)}", True, White)
-    screen.blit(white_text, (20, 20))
-    screen.blit(black_text, (20, 60))
-    
-    turn_indicator = timer_font.render(f"Turn: {turn.capitalize()}", True, Yellow if turn == "white" else White)
-    screen.blit(turn_indicator, (SCREEN_SIZE - 250, 20))
+    panel_width = 200
+    panel_height = 120
+    panel_x = 20
+    panel_y = 20
+
+    pygame.draw.rect(screen, (40, 40, 40), (panel_x, panel_y, panel_width, panel_height), border_radius=10)
+    pygame.draw.rect(screen, BORDER_COLOR, (panel_x, panel_y, panel_width, panel_height), 2, border_radius=10)
+
+    timer_font = pygame.font.SysFont("arial", 24, bold=True)
+    small_font = pygame.font.SysFont("arial", 16)
+
+    white_label = small_font.render("White", True, TEXT_WHITE)
+    white_time_text = timer_font.render(format_time(display_white_time), True, TEXT_WHITE)
+    screen.blit(white_label, (panel_x + 15, panel_y + 15))
+    screen.blit(white_time_text, (panel_x + 15, panel_y + 35))
+
+    black_label = small_font.render("Black", True, TEXT_GRAY)
+    black_time_text = timer_font.render(format_time(display_black_time), True, TEXT_GRAY)
+    screen.blit(black_label, (panel_x + 15, panel_y + 75))
+    screen.blit(black_time_text, (panel_x + 15, panel_y + 95))
+
+    turn_panel_width = 180
+    turn_panel_height = 50
+    turn_panel_x = SCREEN_SIZE - turn_panel_width - 20
+    turn_panel_y = 20
+
+    pygame.draw.rect(screen, (40, 40, 40), (turn_panel_x, turn_panel_y, turn_panel_width, turn_panel_height), border_radius=8)
+    pygame.draw.rect(screen, ACCENT_BLUE if turn == "white" else ACCENT_GREEN,
+                     (turn_panel_x, turn_panel_y, turn_panel_width, turn_panel_height), 3, border_radius=8)
+
+    turn_text = timer_font.render(f"{turn.capitalize()}'s Turn", True, HIGHLIGHT_YELLOW)
+    turn_text_x = turn_panel_x + (turn_panel_width - turn_text.get_width()) // 2
+    turn_text_y = turn_panel_y + (turn_panel_height - turn_text.get_height()) // 2
+    screen.blit(turn_text, (turn_text_x, turn_text_y))
 
 def in_bounds(row, col):
     return 0 <= row < 8 and 0 <= col < 8
@@ -400,10 +485,11 @@ def main():
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     x, y = pygame.mouse.get_pos()
                     for i, option in enumerate(menu_options):
-                        option_text = pygame.font.SysFont(None, 48).render(option, True, White)
-                        option_x = SCREEN_SIZE // 2 - option_text.get_width() // 2
-                        option_y = 300 + i * 80
-                        if option_x <= x <= option_x + option_text.get_width() and option_y <= y <= option_y + option_text.get_height():
+                        option_width = 300
+                        option_height = 60
+                        option_x = SCREEN_SIZE // 2 - option_width // 2
+                        option_y = 280 + i * 80
+                        if option_x <= x <= option_x + option_width and option_y <= y <= option_y + option_height:
                             if i == 0:
                                 in_menu = False
                                 turn_start_time = pygame.time.get_ticks()
@@ -414,13 +500,17 @@ def main():
                                 running = False
                             break
             else:
-                if event.type == pygame.KEYDOWN and event.key == pygame.K_r:
-                    reset_game()
-                    continue
-
-                if event.type == pygame.KEYDOWN and event.key == pygame.K_u:
-                    undo_move()
-                    continue
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_r:
+                        reset_game()
+                        continue
+                    elif event.key == pygame.K_u:
+                        undo_move()
+                        continue
+                    elif event.key == pygame.K_ESCAPE:
+                        in_menu = True
+                        selected_option = 0
+                        continue
 
                 if turn_start_time is not None:
                     elapsed = (pygame.time.get_ticks() - turn_start_time) / 1000.0
@@ -524,18 +614,24 @@ def main():
             else:
                 display_white_time = white_time
                 display_black_time = black_time
-            
-            screen.fill(Cyan)
+
+            screen.fill(BACKGROUND)
             chess_board_drawing()
             draw_pieces()
-            
-            timer_font = pygame.font.SysFont(None, 36)
-            white_text = timer_font.render(f"White: {format_time(display_white_time)}", True, White)
-            black_text = timer_font.render(f"Black: {format_time(display_black_time)}", True, White)
-            screen.blit(white_text, (20, 20))
-            screen.blit(black_text, (20, 60))
-            turn_indicator = timer_font.render(f"Turn: {turn.capitalize()}", True, Yellow if turn == "white" else Yellow)
-            screen.blit(turn_indicator, (SCREEN_SIZE - 250, 20))
+            draw_timers()
+
+            if game_over:
+                status_font = pygame.font.SysFont("arial", 48, bold=True)
+                status_text = status_font.render("Game Over!", True, HIGHLIGHT_YELLOW)
+                status_x = SCREEN_SIZE // 2 - status_text.get_width() // 2
+                status_y = SCREEN_SIZE // 2 - status_text.get_height() // 2
+                screen.blit(status_text, (status_x, status_y))
+
+                restart_font = pygame.font.SysFont("arial", 24)
+                restart_text = restart_font.render("Press R to restart or ESC for menu", True, TEXT_GRAY)
+                restart_x = SCREEN_SIZE // 2 - restart_text.get_width() // 2
+                restart_y = status_y + 60
+                screen.blit(restart_text, (restart_x, restart_y))
         pygame.display.update()
         clock.tick(60)
 
